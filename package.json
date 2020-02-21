@@ -1,0 +1,10 @@
+{
+  "name": "stonks",
+  "version": "0.0.1",
+  "description": "An app that helps you rebalance your stocks portfolio",
+  "main": "index.js",
+  "repository": "git@github.com:jimmywctruong/stonks.git",
+  "author": "Jimmy Truong <22500583+jimmywctruong@users.noreply.github.com>",
+  "license": "MIT",
+  "private": true
+}
