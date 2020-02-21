@@ -6,5 +6,8 @@
   "repository": "git@github.com:jimmywctruong/stonks.git",
   "author": "Jimmy Truong <22500583+jimmywctruong@users.noreply.github.com>",
   "license": "MIT",
-  "private": true
+  "private": true,
+  "dependencies": {
+    "elm": "^0.19.1-3"
+  }
 }
