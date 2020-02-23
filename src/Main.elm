@@ -1,8 +1,12 @@
 module Main exposing (Model)
 
 import Browser exposing (Document)
-import Html exposing (Html, div, text)
+import Dict exposing (Dict)
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
 import List
+import Tuple exposing (..)
 
 
 main : Program Int Model Msg
@@ -22,11 +26,13 @@ subscriptions model =
 init : Int -> ( Model, Cmd msg )
 init _ =
     ( { stocks =
-            [ Stock "VCN" 0.3
-            , Stock "XAW" 0.6
-            , Stock "ZAGlkdjalas" 0.3
-            , Stock "Berry" 0.3
-            ]
+            Dict.fromList
+                [ ( "VCN", IndexedStock 0 (Stock "VCN" 0.3) )
+                , ( "XAW", IndexedStock 1 (Stock "XAW" 0.6) )
+                , ( "ZAG", IndexedStock 2 (Stock "ZAG" 0.3) )
+                , ( "Berry", IndexedStock 3 (Stock "Berry" 0.3) )
+                ]
+      , newStock = Stock "" 0.0
       }
     , Cmd.none
     )
@@ -37,7 +43,22 @@ init _ =
 
 
 type alias Model =
-    { stocks : List Stock
+    { stocks : Dict Key IndexedStock
+    , newStock : Stock
+    }
+
+
+type alias Index =
+    Int
+
+
+type alias Key =
+    String
+
+
+type alias IndexedStock =
+    { positionIndex : Index
+    , stock : Stock
     }
 
 
@@ -52,14 +73,29 @@ type alias Stock =
 
 
 type Msg
-    = TextUpdate String
+    = UpdateStock Key IndexedStock
+    | AddStock Stock
 
 
 update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
     case msg of
-        TextUpdate text ->
-            ( model, Cmd.none )
+        UpdateStock key indexedStock ->
+            if key == indexedStock.stock.name then
+                ( { model | stocks = Dict.insert key indexedStock model.stocks }, Cmd.none )
+
+            else
+                ( { model
+                    | stocks =
+                        model.stocks
+                            |> Dict.remove key
+                            |> Dict.insert indexedStock.stock.name indexedStock
+                  }
+                , Cmd.none
+                )
+
+        AddStock stock ->
+            ( { model | stocks = Dict.insert stock.name (IndexedStock (Dict.size model.stocks) stock) model.stocks }, Cmd.none )
 
 
 
@@ -68,10 +104,42 @@ update msg model =
 
 view : Model -> Document Msg
 view model =
-    Document "Stonks App" (renderModel model)
+    Document "Stonks App" [ stockTable model ]
+
+
+stockTable : Model -> Html Msg
+stockTable model =
+    div []
+        [ div []
+            [ div []
+                [ text "Name" ]
+            , div
+                []
+                [ text "Percentage" ]
+            ]
+        , div [] (renderModel model)
+        , div [] addStock
+        ]
+
+
+addStock : List (Html Msg)
+addStock =
+    [ div []
+        [ input [] []
+        ]
+    ]
 
 
 renderModel : Model -> List (Html Msg)
 renderModel model =
     model.stocks
-        |> List.map (\x -> div [] [ text x.name ])
+        |> Dict.toList
+        |> List.sortBy (\t -> (Tuple.second t).positionIndex)
+        |> List.map (\t -> (Tuple.second t).stock)
+        |> List.map
+            (\s ->
+                div []
+                    [ input [ value s.name ] []
+                    , input [ value (String.fromFloat s.percent) ] []
+                    ]
+            )

@@ -2,6 +2,7 @@ const path = require('path');
 const webpack = require('webpack');
 
 module.exports = {
+    entry: './src/index.js',
     module: {
         rules: [
             {
@@ -20,8 +21,6 @@ module.exports = {
                         options: {
                             cwd: __dirname,
                             debug: true,
-                            forceWatch: true,
-                            verbose: true
                         }
                     }
                 ]
