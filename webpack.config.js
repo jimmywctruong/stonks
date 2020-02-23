@@ -1,6 +1,5 @@
 const path = require('path');
 const webpack = require('webpack');
-const PnpWebpackPlugin = require('pnp-webpack-plugin');
 
 module.exports = {
     module: {
@@ -12,7 +11,7 @@ module.exports = {
             },
             {
                 test: /\.elm$/,
-                exclude: [/node_modules/, /elm-stuff/],
+                exclude: [/elm-stuff/, /node_modules/],
 
                 use: [
                     {loader: 'elm-hot-webpack-loader'},
@@ -26,18 +25,6 @@ module.exports = {
                 ]
             }
         ]
-    },
-
-    resolve: {
-        plugins: [
-            PnpWebpackPlugin,
-        ],
-    },
-
-    resolveLoader: {
-        plugins: [
-            PnpWebpackPlugin.moduleLoader(module),
-        ],
     },
 
     plugins: [

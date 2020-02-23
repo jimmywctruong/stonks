@@ -1,8 +1,8 @@
 'use strict';
 
 require('./index.html');
-var Elm = require('./Main.elm').Elm;
+const {Elm} = require('./Main.elm');
 
-var app = Elm.Main.init({
-    node: document.getElementByid('main')
+document.addEventListener('DOMContentLoaded', function() {
+    Elm.Main.init({node: document.getElementById('main')});
 });
