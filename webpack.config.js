@@ -19,17 +19,15 @@ module.exports = {
                         loader: 'elm-webpack-loader',
                         options: {
                             cwd: __dirname,
-                            debug: false
+                            debug: true,
+                            forceWatch: true,
+                            verbose: true
                         }
                     }
                 ]
             }
         ]
     },
-
-    plugins: [
-        new webpack.HotModuleReplacementPlugin()
-    ],
 
     mode: 'development',
 

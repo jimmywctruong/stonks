@@ -1,23 +1,35 @@
 module Main exposing (Model)
 
-import Browser
+import Browser exposing (Document)
 import Html exposing (Html, div, text)
 import List
 
 
-main : Program () Model Msg
+main : Program Int Model Msg
 main =
-    Browser.sandbox { init = init, update = update, view = view }
+    Browser.document { init = init, update = update, view = view, subscriptions = subscriptions }
 
 
-init : Model
-init =
-    { stocks =
-        [ Stock "VCN" 0.3
-        , Stock "XAW" 0.6
-        , Stock "ZAG" 0.1
-        ]
-    }
+
+-- Subscriptions
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.none
+
+
+init : Int -> ( Model, Cmd msg )
+init _ =
+    ( { stocks =
+            [ Stock "VCN" 0.3
+            , Stock "XAW" 0.6
+            , Stock "ZAGlkdjalas" 0.3
+            , Stock "Berry" 0.3
+            ]
+      }
+    , Cmd.none
+    )
 
 
 
@@ -43,23 +55,23 @@ type Msg
     = TextUpdate String
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
     case msg of
         TextUpdate text ->
-            model
+            ( model, Cmd.none )
 
 
 
 -- View
 
 
-view : Model -> Html Msg
+view : Model -> Document Msg
 view model =
-    div [] (model |> renderModel |> List.map (\name -> div [] [ text name ]))
+    Document "Stonks App" (renderModel model)
 
 
-renderModel : Model -> List String
+renderModel : Model -> List (Html Msg)
 renderModel model =
     model.stocks
-        |> List.map (\x -> x.name)
+        |> List.map (\x -> div [] [ text x.name ])
