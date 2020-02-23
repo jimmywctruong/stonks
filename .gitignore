@@ -1,8 +1,9 @@
+# Elm Packages
 elm-stuff/
+
+# Node Packages
 node_modules/
 
-# Yarn
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.pnp.*
+# Webpack output
+dist/
+
