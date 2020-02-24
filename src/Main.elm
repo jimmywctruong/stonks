@@ -5,7 +5,9 @@ import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Json.Decode as D
 import List
+import Maybe exposing (..)
 import Tuple exposing (..)
 
 
@@ -52,6 +54,10 @@ type alias Index =
     Int
 
 
+type alias KeyboardCode =
+    Int
+
+
 type alias Key =
     String
 
@@ -74,7 +80,9 @@ type alias Stock =
 
 type Msg
     = UpdateStock Key IndexedStock
-    | AddStock Stock
+    | KeyDown KeyboardCode
+    | UpdateNewStockName String
+    | UpdateNewStockPercent String
 
 
 update : Msg -> Model -> ( Model, Cmd msg )
@@ -94,8 +102,32 @@ update msg model =
                 , Cmd.none
                 )
 
-        AddStock stock ->
-            ( { model | stocks = Dict.insert stock.name (IndexedStock (Dict.size model.stocks) stock) model.stocks }, Cmd.none )
+        UpdateNewStockName name ->
+            ( { model | newStock = Stock name model.newStock.percent }, Cmd.none )
+
+        UpdateNewStockPercent strPercent ->
+            let
+                percent =
+                    Maybe.withDefault 0.0 (String.toFloat strPercent)
+            in
+            ( { model | newStock = Stock model.newStock.name percent }, Cmd.none )
+
+        KeyDown code ->
+            -- enter keycode is 13
+            if code == 13 then
+                ( addStock model, Cmd.none )
+
+            else
+                ( model, Cmd.none )
+
+
+addStock : Model -> Model
+addStock model =
+    let
+        stock =
+            model.newStock
+    in
+    { model | stocks = Dict.insert stock.name (IndexedStock (Dict.size model.stocks) stock) model.stocks }
 
 
 
@@ -118,16 +150,22 @@ stockTable model =
                 [ text "Percentage" ]
             ]
         , div [] (renderModel model)
-        , div [] addStock
+        , div [] addStockView
         ]
 
 
-addStock : List (Html Msg)
-addStock =
+addStockView : List (Html Msg)
+addStockView =
     [ div []
-        [ input [] []
+        [ input [ onKeyDown KeyDown, onInput UpdateNewStockName ] []
+        , input [ onInput UpdateNewStockPercent ] []
         ]
     ]
+
+
+onKeyDown : (Int -> msg) -> Attribute msg
+onKeyDown keyCaptor =
+    on "keydown" (D.map keyCaptor keyCode)
 
 
 renderModel : Model -> List (Html Msg)
