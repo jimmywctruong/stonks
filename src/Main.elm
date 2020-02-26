@@ -34,7 +34,7 @@ init _ =
                 , ( "ZAG", IndexedStock 2 (Stock "ZAG" 0.3) )
                 , ( "Berry", IndexedStock 3 (Stock "Berry" 0.3) )
                 ]
-      , newStock = Stock "" 0.0
+      , newStock = NewStock "" ""
       }
     , Cmd.none
     )
@@ -46,7 +46,7 @@ init _ =
 
 type alias Model =
     { stocks : Dict Key IndexedStock
-    , newStock : Stock
+    , newStock : NewStock
     }
 
 
@@ -65,6 +65,12 @@ type alias Key =
 type alias IndexedStock =
     { positionIndex : Index
     , stock : Stock
+    }
+
+
+type alias NewStock =
+    { name : String
+    , percent : String
     }
 
 
@@ -90,7 +96,7 @@ update msg model =
     case msg of
         UpdateStock key indexedStock ->
             if key == indexedStock.stock.name then
-                ( { model | stocks = Dict.insert key indexedStock model.stocks }, Cmd.none )
+                ( insertIndexedStock indexedStock model, Cmd.none )
 
             else
                 ( { model
@@ -103,31 +109,50 @@ update msg model =
                 )
 
         UpdateNewStockName name ->
-            ( { model | newStock = Stock name model.newStock.percent }, Cmd.none )
+            ( { model | newStock = NewStock name model.newStock.percent }, Cmd.none )
 
-        UpdateNewStockPercent strPercent ->
-            let
-                percent =
-                    Maybe.withDefault 0.0 (String.toFloat strPercent)
-            in
-            ( { model | newStock = Stock model.newStock.name percent }, Cmd.none )
+        UpdateNewStockPercent percent ->
+            ( { model | newStock = NewStock model.newStock.name percent }, Cmd.none )
 
         KeyDown code ->
             -- enter keycode is 13
             if code == 13 then
-                ( addStock model, Cmd.none )
+                case Dict.get model.newStock.name model.stocks of
+                    Just stock ->
+                        case String.toFloat model.newStock.percent of
+                            Just percent ->
+                                ( insertIndexedStock (IndexedStock stock.positionIndex (Stock model.newStock.name percent)) model, Cmd.none )
+
+                            Nothing ->
+                                ( addStock model, Cmd.none )
+
+                    Nothing ->
+                        ( addStock model, Cmd.none )
 
             else
                 ( model, Cmd.none )
 
 
+insertIndexedStock : IndexedStock -> Model -> Model
+insertIndexedStock indexedStock model =
+    { model | stocks = Dict.insert indexedStock.stock.name indexedStock model.stocks, newStock = NewStock "" "" }
+
+
 addStock : Model -> Model
 addStock model =
-    let
-        stock =
-            model.newStock
-    in
-    { model | stocks = Dict.insert stock.name (IndexedStock (Dict.size model.stocks) stock) model.stocks }
+    case String.toFloat model.newStock.percent of
+        Just percent ->
+            let
+                stock =
+                    Stock model.newStock.name percent
+            in
+            { model
+                | stocks = Dict.insert stock.name (IndexedStock (Dict.size model.stocks) stock) model.stocks
+                , newStock = NewStock "" ""
+            }
+
+        Nothing ->
+            model
 
 
 
@@ -150,15 +175,15 @@ stockTable model =
                 [ text "Percentage" ]
             ]
         , div [] (renderModel model)
-        , div [] addStockView
+        , div [] (addStockView model)
         ]
 
 
-addStockView : List (Html Msg)
-addStockView =
+addStockView : Model -> List (Html Msg)
+addStockView model =
     [ div []
-        [ input [ onKeyDown KeyDown, onInput UpdateNewStockName ] []
-        , input [ onInput UpdateNewStockPercent ] []
+        [ input [ onKeyDown KeyDown, onInput UpdateNewStockName, placeholder "Ticker Symbol", value model.newStock.name ] []
+        , input [ onKeyDown KeyDown, onInput UpdateNewStockPercent, placeholder "0.0", value model.newStock.percent ] []
         ]
     ]
 
