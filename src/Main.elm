@@ -34,7 +34,7 @@ init _ =
                 , ( "ZAG", IndexedStock 2 (Stock "ZAG" 0.3) )
                 , ( "Berry", IndexedStock 3 (Stock "Berry" 0.3) )
                 ]
-      , newStock = NewStock "" ""
+      , newStock = ViewStock "" ""
       }
     , Cmd.none
     )
@@ -45,8 +45,8 @@ init _ =
 
 
 type alias Model =
-    { stocks : Dict Key IndexedStock
-    , newStock : NewStock
+    { stocks : Dict StockKey IndexedStock
+    , newStock : ViewStock
     }
 
 
@@ -58,7 +58,7 @@ type alias KeyboardCode =
     Int
 
 
-type alias Key =
+type alias StockKey =
     String
 
 
@@ -68,7 +68,7 @@ type alias IndexedStock =
     }
 
 
-type alias NewStock =
+type alias ViewStock =
     { name : String
     , percent : String
     }
@@ -85,8 +85,8 @@ type alias Stock =
 
 
 type Msg
-    = UpdateStock Key IndexedStock
-    | KeyDown KeyboardCode
+    = UpdateStock StockKey IndexedStock
+    | EnterNewStock KeyboardCode
     | UpdateNewStockName String
     | UpdateNewStockPercent String
 
@@ -109,12 +109,12 @@ update msg model =
                 )
 
         UpdateNewStockName name ->
-            ( { model | newStock = NewStock name model.newStock.percent }, Cmd.none )
+            ( { model | newStock = ViewStock name model.newStock.percent }, Cmd.none )
 
         UpdateNewStockPercent percent ->
-            ( { model | newStock = NewStock model.newStock.name percent }, Cmd.none )
+            ( { model | newStock = ViewStock model.newStock.name percent }, Cmd.none )
 
-        KeyDown code ->
+        EnterNewStock code ->
             -- enter keycode is 13
             if code == 13 then
                 case Dict.get model.newStock.name model.stocks of
@@ -135,7 +135,7 @@ update msg model =
 
 insertIndexedStock : IndexedStock -> Model -> Model
 insertIndexedStock indexedStock model =
-    { model | stocks = Dict.insert indexedStock.stock.name indexedStock model.stocks, newStock = NewStock "" "" }
+    { model | stocks = Dict.insert indexedStock.stock.name indexedStock model.stocks, newStock = ViewStock "" "" }
 
 
 addStock : Model -> Model
@@ -148,7 +148,7 @@ addStock model =
             in
             { model
                 | stocks = Dict.insert stock.name (IndexedStock (Dict.size model.stocks) stock) model.stocks
-                , newStock = NewStock "" ""
+                , newStock = ViewStock "" ""
             }
 
         Nothing ->
@@ -182,8 +182,8 @@ stockTable model =
 addStockView : Model -> List (Html Msg)
 addStockView model =
     [ div []
-        [ input [ onKeyDown KeyDown, onInput UpdateNewStockName, placeholder "Ticker Symbol", value model.newStock.name ] []
-        , input [ onKeyDown KeyDown, onInput UpdateNewStockPercent, placeholder "0.0", value model.newStock.percent ] []
+        [ input [ onKeyDown EnterNewStock, onInput UpdateNewStockName, placeholder "Ticker Symbol", value model.newStock.name ] []
+        , input [ onKeyDown EnterNewStock, onInput UpdateNewStockPercent, placeholder "0.0", value model.newStock.percent ] []
         ]
     ]
 
