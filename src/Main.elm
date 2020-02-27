@@ -28,16 +28,29 @@ subscriptions model =
 init : Int -> ( Model, Cmd msg )
 init _ =
     ( { stocks =
-            Dict.fromList
-                [ ( "VCN", IndexedStock 0 (Stock "VCN" 0.3) )
-                , ( "XAW", IndexedStock 1 (Stock "XAW" 0.6) )
-                , ( "ZAG", IndexedStock 2 (Stock "ZAG" 0.3) )
-                , ( "Berry", IndexedStock 3 (Stock "Berry" 0.3) )
-                ]
-      , newStock = ViewStock "" ""
+            initialStockView
+      , newStock = StockInput "" ""
       }
     , Cmd.none
     )
+
+
+initialStockView : Dict StockKey StockView
+initialStockView =
+    initialStocks
+        |> List.indexedMap (\index stock -> stockViewFromStock index stock)
+        |> List.map (\stockView -> ( stockView.stock.name, stockView ))
+        |> Dict.fromList
+
+
+stockViewFromStock : Index -> Stock -> StockView
+stockViewFromStock index stock =
+    StockView index (StockInput stock.name (String.fromFloat stock.percent)) stock
+
+
+initialStocks : List Stock
+initialStocks =
+    [ Stock "VCN" 0.3, Stock "XAW" 0.6, Stock "ZAG" 0.3, Stock "Berry" 0.3 ]
 
 
 
@@ -45,8 +58,8 @@ init _ =
 
 
 type alias Model =
-    { stocks : Dict StockKey IndexedStock
-    , newStock : ViewStock
+    { stocks : Dict StockKey StockView
+    , newStock : StockInput
     }
 
 
@@ -68,7 +81,14 @@ type alias IndexedStock =
     }
 
 
-type alias ViewStock =
+type alias StockView =
+    { index : Index
+    , stockInput : StockInput
+    , stock : Stock
+    }
+
+
+type alias StockInput =
     { name : String
     , percent : String
     }
@@ -109,10 +129,10 @@ update msg model =
                 )
 
         UpdateNewStockName name ->
-            ( { model | newStock = ViewStock name model.newStock.percent }, Cmd.none )
+            ( { model | newStock = StockInput name model.newStock.percent }, Cmd.none )
 
         UpdateNewStockPercent percent ->
-            ( { model | newStock = ViewStock model.newStock.name percent }, Cmd.none )
+            ( { model | newStock = StockInput model.newStock.name percent }, Cmd.none )
 
         EnterNewStock code ->
             -- enter keycode is 13
@@ -135,7 +155,7 @@ update msg model =
 
 insertIndexedStock : IndexedStock -> Model -> Model
 insertIndexedStock indexedStock model =
-    { model | stocks = Dict.insert indexedStock.stock.name indexedStock model.stocks, newStock = ViewStock "" "" }
+    { model | stocks = Dict.insert indexedStock.stock.name indexedStock model.stocks, newStock = StockInput "" "" }
 
 
 addStock : Model -> Model
@@ -147,8 +167,8 @@ addStock model =
                     Stock model.newStock.name percent
             in
             { model
-                | stocks = Dict.insert stock.name (IndexedStock (Dict.size model.stocks) stock) model.stocks
-                , newStock = ViewStock "" ""
+                | stocks = Dict.insert (stockViewFromStock model.stocks.size stock) model.stocks
+                , newStock = StockInput "" ""
             }
 
         Nothing ->
