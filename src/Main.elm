@@ -103,6 +103,7 @@ type Msg
     | NewStockEntry KeyboardCode
     | UpdateStockInput StockKey StockInput
     | UpdateNewStock StockInput
+    | Remove StockKey
 
 
 update : Msg -> Model -> ( Model, Cmd msg )
@@ -179,6 +180,9 @@ update msg model =
 
             else
                 ( model, Cmd.none )
+
+        Remove key ->
+            ( { model | stocks = Dict.remove key model.stocks }, Cmd.none )
 
 
 insertStockView : StockView -> Model -> Model
@@ -284,5 +288,6 @@ renderModel model =
                         , value stockInput.percent
                         ]
                         []
+                    , button [ onClick (Remove key) ] [ text "❌" ]
                     ]
             )
