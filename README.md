@@ -11,4 +11,4 @@ To install
 
 To start the development server
 
-- `yarn dev`
+- `yarn start`
