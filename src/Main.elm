@@ -234,8 +234,20 @@ stockTable model =
 addStockView : Model -> List (Html Msg)
 addStockView model =
     [ div []
-        [ input [ onKeyDown NewStockEntry, onInput UpdateNewStockName, placeholder "Ticker Symbol", value model.newStock.name ] []
-        , input [ onKeyDown NewStockEntry, onInput UpdateNewStockPercent, placeholder "0.0", value model.newStock.percent ] []
+        [ input
+            [ onKeyDown NewStockEntry
+            , onInput UpdateNewStockName
+            , placeholder "Ticker Symbol"
+            , value model.newStock.name
+            ]
+            []
+        , input
+            [ onKeyDown NewStockEntry
+            , onInput UpdateNewStockPercent
+            , placeholder "0.0"
+            , value model.newStock.percent
+            ]
+            []
         ]
     ]
 
@@ -264,7 +276,17 @@ renderModel model =
                         (Tuple.second t).stockInput
                 in
                 div []
-                    [ input [ onKeyDown (UpdateStockEntry key stockInput), onInput (\s -> UpdateStockInput key (StockInput s (String.fromFloat stock.percent))), value stockInput.name ] []
-                    , input [ onKeyDown (UpdateStockEntry key stockInput), onInput (\s -> UpdateStockInput key (StockInput stock.name s)), value stockInput.percent ] []
+                    [ input
+                        [ onKeyDown (UpdateStockEntry key stockInput)
+                        , onInput (\s -> UpdateStockInput key (StockInput s (String.fromFloat stock.percent)))
+                        , value stockInput.name
+                        ]
+                        []
+                    , input
+                        [ onKeyDown (UpdateStockEntry key stockInput)
+                        , onInput (\s -> UpdateStockInput key (StockInput stock.name s))
+                        , value stockInput.percent
+                        ]
+                        []
                     ]
             )
