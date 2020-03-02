@@ -102,8 +102,7 @@ type Msg
     = UpdateStockEntry StockKey StockInput KeyboardCode
     | NewStockEntry KeyboardCode
     | UpdateStockInput StockKey StockInput
-    | UpdateNewStockName String
-    | UpdateNewStockPercent String
+    | UpdateNewStock StockInput
 
 
 update : Msg -> Model -> ( Model, Cmd msg )
@@ -153,11 +152,8 @@ update msg model =
                 Nothing ->
                     ( model, Cmd.none )
 
-        UpdateNewStockName name ->
-            ( { model | newStock = StockInput name model.newStock.percent }, Cmd.none )
-
-        UpdateNewStockPercent percent ->
-            ( { model | newStock = StockInput model.newStock.name percent }, Cmd.none )
+        UpdateNewStock stockInput ->
+            ( { model | newStock = stockInput }, Cmd.none )
 
         NewStockEntry code ->
             -- enter keycode is 13
@@ -236,14 +232,14 @@ addStockView model =
     [ div []
         [ input
             [ onKeyDown NewStockEntry
-            , onInput UpdateNewStockName
+            , onInput (\name -> UpdateNewStock (StockInput name model.newStock.percent))
             , placeholder "Ticker Symbol"
             , value model.newStock.name
             ]
             []
         , input
             [ onKeyDown NewStockEntry
-            , onInput UpdateNewStockPercent
+            , onInput (\percent -> UpdateNewStock (StockInput model.newStock.name percent))
             , placeholder "0.0"
             , value model.newStock.percent
             ]
@@ -278,13 +274,13 @@ renderModel model =
                 div []
                     [ input
                         [ onKeyDown (UpdateStockEntry key stockInput)
-                        , onInput (\s -> UpdateStockInput key (StockInput s (String.fromFloat stock.percent)))
+                        , onInput (\name -> UpdateStockInput key (StockInput name (String.fromFloat stock.percent)))
                         , value stockInput.name
                         ]
                         []
                     , input
                         [ onKeyDown (UpdateStockEntry key stockInput)
-                        , onInput (\s -> UpdateStockInput key (StockInput stock.name s))
+                        , onInput (\percent -> UpdateStockInput key (StockInput stock.name percent))
                         , value stockInput.percent
                         ]
                         []
