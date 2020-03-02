@@ -24,6 +24,6 @@
     "loader-utils": "^1.4.0"
   },
   "scripts": {
-    "dev": "webpack-dev-server --hot --colors"
+    "start": "webpack-dev-server --hot --colors"
    }
 }

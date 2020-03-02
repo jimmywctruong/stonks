@@ -75,12 +75,6 @@ type alias StockKey =
     String
 
 
-type alias IndexedStock =
-    { positionIndex : Index
-    , stock : Stock
-    }
-
-
 type alias StockView =
     { index : Index
     , stockInput : StockInput
@@ -105,8 +99,9 @@ type alias Stock =
 
 
 type Msg
-    = UpdateStock StockKey IndexedStock
-    | EnterNewStock KeyboardCode
+    = UpdateStockEntry StockKey StockInput KeyboardCode
+    | NewStockEntry KeyboardCode
+    | UpdateStockInput StockKey StockInput
     | UpdateNewStockName String
     | UpdateNewStockPercent String
 
@@ -114,19 +109,49 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
     case msg of
-        UpdateStock key indexedStock ->
-            if key == indexedStock.stock.name then
-                ( insertIndexedStock indexedStock model, Cmd.none )
+        UpdateStockEntry key stockInput code ->
+            if code == 13 then
+                case String.toFloat stockInput.percent of
+                    Just percent ->
+                        let
+                            stock =
+                                Stock stockInput.name percent
+                        in
+                        case Dict.get key model.stocks of
+                            Just stockView ->
+                                if key == stock.name then
+                                    ( insertStockView (StockView stockView.index stockView.stockInput stock) model, Cmd.none )
+
+                                else
+                                    ( { model
+                                        | stocks =
+                                            model.stocks
+                                                |> Dict.remove key
+                                                |> Dict.insert stock.name (StockView stockView.index (StockInput stock.name (String.fromFloat stock.percent)) stock)
+                                      }
+                                    , Cmd.none
+                                    )
+
+                            Nothing ->
+                                ( model, Cmd.none )
+
+                    Nothing ->
+                        ( model, Cmd.none )
 
             else
-                ( { model
-                    | stocks =
-                        model.stocks
-                            |> Dict.remove key
-                            |> Dict.insert indexedStock.stock.name indexedStock
-                  }
-                , Cmd.none
-                )
+                ( model, Cmd.none )
+
+        UpdateStockInput key stockInput ->
+            case Dict.get key model.stocks of
+                Just stockView ->
+                    let
+                        updatedStockView =
+                            StockView stockView.index stockInput stockView.stock
+                    in
+                    ( { model | stocks = Dict.insert key updatedStockView model.stocks }, Cmd.none )
+
+                Nothing ->
+                    ( model, Cmd.none )
 
         UpdateNewStockName name ->
             ( { model | newStock = StockInput name model.newStock.percent }, Cmd.none )
@@ -134,14 +159,21 @@ update msg model =
         UpdateNewStockPercent percent ->
             ( { model | newStock = StockInput model.newStock.name percent }, Cmd.none )
 
-        EnterNewStock code ->
+        NewStockEntry code ->
             -- enter keycode is 13
             if code == 13 then
                 case Dict.get model.newStock.name model.stocks of
-                    Just stock ->
-                        case String.toFloat model.newStock.percent of
+                    Just stockView ->
+                        let
+                            name =
+                                model.newStock.name
+
+                            strPercent =
+                                model.newStock.percent
+                        in
+                        case String.toFloat strPercent of
                             Just percent ->
-                                ( insertIndexedStock (IndexedStock stock.positionIndex (Stock model.newStock.name percent)) model, Cmd.none )
+                                ( insertStockView (StockView stockView.index (StockInput name strPercent) (Stock name percent)) model, Cmd.none )
 
                             Nothing ->
                                 ( addStock model, Cmd.none )
@@ -153,9 +185,9 @@ update msg model =
                 ( model, Cmd.none )
 
 
-insertIndexedStock : IndexedStock -> Model -> Model
-insertIndexedStock indexedStock model =
-    { model | stocks = Dict.insert indexedStock.stock.name indexedStock model.stocks, newStock = StockInput "" "" }
+insertStockView : StockView -> Model -> Model
+insertStockView stockView model =
+    { model | stocks = Dict.insert stockView.stock.name stockView model.stocks, newStock = StockInput "" "" }
 
 
 addStock : Model -> Model
@@ -167,7 +199,7 @@ addStock model =
                     Stock model.newStock.name percent
             in
             { model
-                | stocks = Dict.insert (stockViewFromStock model.stocks.size stock) model.stocks
+                | stocks = Dict.insert stock.name (stockViewFromStock (Dict.size model.stocks) stock) model.stocks
                 , newStock = StockInput "" ""
             }
 
@@ -202,8 +234,8 @@ stockTable model =
 addStockView : Model -> List (Html Msg)
 addStockView model =
     [ div []
-        [ input [ onKeyDown EnterNewStock, onInput UpdateNewStockName, placeholder "Ticker Symbol", value model.newStock.name ] []
-        , input [ onKeyDown EnterNewStock, onInput UpdateNewStockPercent, placeholder "0.0", value model.newStock.percent ] []
+        [ input [ onKeyDown NewStockEntry, onInput UpdateNewStockName, placeholder "Ticker Symbol", value model.newStock.name ] []
+        , input [ onKeyDown NewStockEntry, onInput UpdateNewStockPercent, placeholder "0.0", value model.newStock.percent ] []
         ]
     ]
 
@@ -217,12 +249,22 @@ renderModel : Model -> List (Html Msg)
 renderModel model =
     model.stocks
         |> Dict.toList
-        |> List.sortBy (\t -> (Tuple.second t).positionIndex)
-        |> List.map (\t -> (Tuple.second t).stock)
+        |> List.sortBy (\t -> (Tuple.second t).index)
         |> List.map
-            (\s ->
+            (\t ->
+                let
+                    key =
+                        Tuple.first t
+
+                    stock =
+                        (Tuple.second t).stock
+
+                    stockInput : StockInput
+                    stockInput =
+                        (Tuple.second t).stockInput
+                in
                 div []
-                    [ input [ value s.name ] []
-                    , input [ value (String.fromFloat s.percent) ] []
+                    [ input [ onKeyDown (UpdateStockEntry key stockInput), onInput (\s -> UpdateStockInput key (StockInput s (String.fromFloat stock.percent))), value stockInput.name ] []
+                    , input [ onKeyDown (UpdateStockEntry key stockInput), onInput (\s -> UpdateStockInput key (StockInput stock.name s)), value stockInput.percent ] []
                     ]
             )
