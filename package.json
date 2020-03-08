@@ -9,6 +9,7 @@
   "private": true,
   "devDependencies": {
     "elm-hot-webpack-loader": "^1.1.6",
+    "elm-test": "^0.19.1-revision2",
     "elm-webpack-loader": "^6.0.1",
     "eslint": "^6.8.0",
     "file-loader": "^5.1.0",
@@ -25,5 +26,5 @@
   },
   "scripts": {
     "start": "webpack-dev-server --hot --colors"
-   }
+  }
 }
