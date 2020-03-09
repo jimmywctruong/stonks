@@ -1,4 +1,4 @@
-module OrderedDict exposing (OrderedDict, insert, remove)
+module OrderedDict exposing (OrderedDict, empty, get, insert, isEmpty, remove, size)
 
 import Dict exposing (Dict)
 import Maybe exposing (Maybe(..))
@@ -15,6 +15,27 @@ type alias OrderedValue comparable v =
     , value : v
     , next : Maybe comparable
     }
+
+
+empty : OrderedDict comparable v
+empty =
+    OrderedDict Dict.empty Nothing
+
+
+size : OrderedDict comparable v -> Int
+size data =
+    Dict.size data.dict
+
+
+isEmpty : OrderedDict comparable v -> Bool
+isEmpty data =
+    Dict.isEmpty data.dict
+
+
+get : comparable -> OrderedDict comparable v -> Maybe v
+get key data =
+    Dict.get key data.dict
+        |> Maybe.map (\v -> v.value)
 
 
 insert : comparable -> v -> OrderedDict comparable v -> OrderedDict comparable v
@@ -61,7 +82,9 @@ remove key data =
                     ).dict
             in
             { data
-                | dict = newDict
+                | dict =
+                    newDict
+                        |> Dict.remove key
                 , tail = data.tail |> updateTail orderedValue
             }
 
