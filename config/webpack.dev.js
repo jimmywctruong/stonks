@@ -1,5 +1,6 @@
 const merge = require('webpack-merge');
 const common = require('./webpack.common.js');
+const path = require('path')
 
 module.exports = merge(common, {
     module: {
@@ -12,7 +13,7 @@ module.exports = merge(common, {
                     {
                         loader: 'elm-webpack-loader',
                         options: {
-                            cwd: __dirname,
+                            cwd: path.join(__dirname, '..'),
                             debug: true,
                         }
                     }
