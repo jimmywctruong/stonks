@@ -28,8 +28,6 @@ module.exports = {
         ]
     },
 
-    mode: 'development',
-
     devServer: {
         inline: true,
         hot: true,

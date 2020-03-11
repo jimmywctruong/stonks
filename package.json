@@ -8,6 +8,7 @@
   "license": "MIT",
   "private": true,
   "devDependencies": {
+    "elm-format": "^0.8.3",
     "elm-hot-webpack-loader": "^1.1.6",
     "elm-test": "^0.19.1-revision2",
     "elm-webpack-loader": "^6.0.1",
@@ -25,7 +26,10 @@
     "loader-utils": "^1.4.0"
   },
   "scripts": {
-    "start": "webpack-dev-server --hot --colors",
-    "test": "yarn elm-test"
+    "start": "webpack-dev-server --mode=development --hot --colors",
+    "build": "yarn test && webpack --mode=production",
+    "format": "elm-format --yes src/",
+    "test": "elm-test",
+    "unittest": "elm-test --watch"
   }
 }

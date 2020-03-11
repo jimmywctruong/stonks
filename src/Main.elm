@@ -1,4 +1,19 @@
-module Main exposing (KeyboardCode, Msg(..), addStock, addStockView, init, initialModel, initialStocks, main, onKeyDown, renderModel, stockTable, subscriptions, update, view)
+module Main exposing
+    ( KeyboardCode
+    , Msg(..)
+    , addStock
+    , addStockView
+    , init
+    , initialModel
+    , initialStocks
+    , main
+    , onKeyDown
+    , renderModel
+    , stockTable
+    , subscriptions
+    , update
+    , view
+    )
 
 import Browser exposing (Document)
 import Html exposing (..)
