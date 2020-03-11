@@ -28,7 +28,7 @@
   "scripts": {
     "start": "webpack-dev-server --mode=development --hot --colors",
     "build": "yarn test && webpack --mode=production",
-    "format": "elm-format --yes src/",
+    "format": "elm-format --yes src/ tests/",
     "test": "elm-test",
     "unittest": "elm-test --watch"
   }
