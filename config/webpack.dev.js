@@ -1,21 +1,14 @@
-const path = require('path');
-const webpack = require('webpack');
+const merge = require('webpack-merge');
+const common = require('./webpack.common.js');
 
-module.exports = {
-    entry: './src/index.js',
+module.exports = merge(common, {
     module: {
         rules: [
             {
-                test: /\.html$/,
-                exclude: [/node_modules/],
-                loader: 'file-loader?name=[name].[ext]'
-            },
-            {
                 test: /\.elm$/,
                 exclude: [/elm-stuff/, /node_modules/],
-
                 use: [
-                    {loader: 'elm-hot-webpack-loader'},
+                    { loader: 'elm-hot-webpack-loader' },
                     {
                         loader: 'elm-webpack-loader',
                         options: {
@@ -27,12 +20,11 @@ module.exports = {
             }
         ]
     },
-
+    mode: 'development',
     devServer: {
         inline: true,
         hot: true,
         stats: 'errors-only'
     }
-};
-
+});
 
