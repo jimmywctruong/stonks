@@ -17,4 +17,4 @@ jobs:
       run: yarn install
 
     - name: Build project
-        yarn build
+      run: yarn build
