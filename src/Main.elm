@@ -1,13 +1,14 @@
-module Main exposing (Model)
+module Main exposing (KeyboardCode, Msg(..), addStock, addStockView, init, initialModel, initialStocks, main, onKeyDown, renderModel, stockTable, subscriptions, update, view)
 
 import Browser exposing (Document)
-import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as D
 import List
 import Maybe exposing (..)
+import Model exposing (..)
+import OrderedDict exposing (..)
 import Tuple exposing (..)
 
 
@@ -21,31 +22,20 @@ main =
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     Sub.none
 
 
 init : Int -> ( Model, Cmd msg )
 init _ =
-    ( { stocks =
-            initialStockView
-      , newStock = StockInput "" ""
-      }
+    ( initialModel initialStocks
     , Cmd.none
     )
 
 
-initialStockView : Dict StockKey StockView
-initialStockView =
-    initialStocks
-        |> List.indexedMap (\index stock -> stockViewFromStock index stock)
-        |> List.map (\stockView -> ( stockView.stock.name, stockView ))
-        |> Dict.fromList
-
-
-stockViewFromStock : Index -> Stock -> StockView
-stockViewFromStock index stock =
-    StockView index (StockInput stock.name (String.fromFloat stock.percent)) stock
+initialModel : List Stock -> Model
+initialModel stocks =
+    Model.fromList stocks
 
 
 initialStocks : List Stock
@@ -57,41 +47,8 @@ initialStocks =
 -- Model
 
 
-type alias Model =
-    { stocks : Dict StockKey StockView
-    , newStock : StockInput
-    }
-
-
-type alias Index =
-    Int
-
-
 type alias KeyboardCode =
     Int
-
-
-type alias StockKey =
-    String
-
-
-type alias StockView =
-    { index : Index
-    , stockInput : StockInput
-    , stock : Stock
-    }
-
-
-type alias StockInput =
-    { name : String
-    , percent : String
-    }
-
-
-type alias Stock =
-    { name : String
-    , percent : Float
-    }
 
 
 
@@ -99,41 +56,25 @@ type alias Stock =
 
 
 type Msg
-    = UpdateStockEntry StockKey StockInput KeyboardCode
+    = UpdateStockEntry Stock StockInput KeyboardCode
     | NewStockEntry KeyboardCode
-    | UpdateStockInput StockKey StockInput
+    | UpdateStockInput Stock StockInput
     | UpdateNewStock StockInput
-    | Remove StockKey
+    | Remove Stock
 
 
 update : Msg -> Model -> ( Model, Cmd msg )
 update msg model =
     case msg of
-        UpdateStockEntry key stockInput code ->
+        UpdateStockEntry stock stockInput code ->
             if code == 13 then
                 case String.toFloat stockInput.percent of
                     Just percent ->
                         let
-                            stock =
+                            newStock =
                                 Stock stockInput.name percent
                         in
-                        case Dict.get key model.stocks of
-                            Just stockView ->
-                                if key == stock.name then
-                                    ( insertStockView (StockView stockView.index stockView.stockInput stock) model, Cmd.none )
-
-                                else
-                                    ( { model
-                                        | stocks =
-                                            model.stocks
-                                                |> Dict.remove key
-                                                |> Dict.insert stock.name (StockView stockView.index (StockInput stock.name (String.fromFloat stock.percent)) stock)
-                                      }
-                                    , Cmd.none
-                                    )
-
-                            Nothing ->
-                                ( model, Cmd.none )
+                        ( Model.replace stock newStock model, Cmd.none )
 
                     Nothing ->
                         ( model, Cmd.none )
@@ -141,53 +82,85 @@ update msg model =
             else
                 ( model, Cmd.none )
 
-        UpdateStockInput key stockInput ->
-            case Dict.get key model.stocks of
-                Just stockView ->
-                    let
-                        updatedStockView =
-                            StockView stockView.index stockInput stockView.stock
-                    in
-                    ( { model | stocks = Dict.insert key updatedStockView model.stocks }, Cmd.none )
+        UpdateStockInput stock stockInput ->
+            ( Model.updateStockInput stock stockInput model, Cmd.none )
 
-                Nothing ->
-                    ( model, Cmd.none )
+        {-
+           case Dict.get key model.stocks of
+               Just stockView ->
+                   let
+                       updatedStockView =
+                           StockView stockView.index stockInput stockView.stock
+                   in
+                   ( { model | stocks = Dict.insert key updatedStockView model.stocks }, Cmd.none )
 
+               Nothing ->
+                   ( model, Cmd.none )
+        -}
         UpdateNewStock stockInput ->
             ( { model | newStock = stockInput }, Cmd.none )
 
         NewStockEntry code ->
             -- enter keycode is 13
             if code == 13 then
-                case Dict.get model.newStock.name model.stocks of
-                    Just stockView ->
+                case String.toFloat model.newStock.percent of
+                    Just percent ->
                         let
-                            name =
-                                model.newStock.name
-
-                            strPercent =
-                                model.newStock.percent
+                            stock =
+                                Stock model.newStock.name percent
                         in
-                        case String.toFloat strPercent of
-                            Just percent ->
-                                ( insertStockView (StockView stockView.index (StockInput name strPercent) (Stock name percent)) model, Cmd.none )
-
-                            Nothing ->
-                                ( addStock model, Cmd.none )
+                        ( model
+                            |> Model.insert stock
+                            |> Model.clearNewStock
+                        , Cmd.none
+                        )
 
                     Nothing ->
-                        ( addStock model, Cmd.none )
+                        ( model, Cmd.none )
 
             else
                 ( model, Cmd.none )
 
-        Remove key ->
-            ( { model | stocks = Dict.remove key model.stocks }, Cmd.none )
+        {-
+               case Dict.get model.newStock.name model.stocks of
+                   Just stockView ->
+                       let
+                           name =
+                               model.newStock.name
+
+                           strPercent =
+                               model.newStock.percent
+                       in
+                       case String.toFloat strPercent of
+                           Just percent ->
+                               let
+                                   stock =
+                                       Stock name percent
+                               in
+                               { model
+                                   | stocks = Model.insert stock model
+                                   , newStock = StockInput "" ""
+                               }
+
+                           Nothing ->
+                               ( addStock model, Cmd.none )
+
+                   Nothing ->
+                       ( addStock model, Cmd.none )
+
+           else
+               ( model, Cmd.none )
+
+        -}
+        Remove stock ->
+            ( Model.remove stock model, Cmd.none )
 
 
-insertStockView : StockView -> Model -> Model
-insertStockView stockView model =
-    { model | stocks = Dict.insert stockView.stock.name stockView model.stocks, newStock = StockInput "" "" }
+
+{- insertStockView : StockView -> Model -> Model
+   -- insertStockView stockView model =
+       { model | stocks = Dict.insert stockView.stock.name stockView model.stocks, newStock = StockInput "" "" }
+-}
 
 
 addStock : Model -> Model
@@ -198,10 +171,9 @@ addStock model =
                 stock =
                     Stock model.newStock.name percent
             in
-            { model
-                | stocks = Dict.insert stock.name (stockViewFromStock (Dict.size model.stocks) stock) model.stocks
-                , newStock = StockInput "" ""
-            }
+            model
+                |> Model.insert stock
+                |> Model.clearNewStock
 
         Nothing ->
             model
@@ -259,35 +231,30 @@ onKeyDown keyCaptor =
 
 renderModel : Model -> List (Html Msg)
 renderModel model =
-    model.stocks
-        |> Dict.toList
-        |> List.sortBy (\t -> (Tuple.second t).index)
+    model
+        |> Model.toStockViewList
         |> List.map
-            (\t ->
+            (\sv ->
                 let
-                    key =
-                        Tuple.first t
-
                     stock =
-                        (Tuple.second t).stock
+                        sv.stock
 
-                    stockInput : StockInput
                     stockInput =
-                        (Tuple.second t).stockInput
+                        sv.stockInput
                 in
                 div []
                     [ input
-                        [ onKeyDown (UpdateStockEntry key stockInput)
-                        , onInput (\name -> UpdateStockInput key (StockInput name (String.fromFloat stock.percent)))
+                        [ onKeyDown (UpdateStockEntry stock stockInput)
+                        , onInput (\name -> UpdateStockInput stock (StockInput name (String.fromFloat stock.percent)))
                         , value stockInput.name
                         ]
                         []
                     , input
-                        [ onKeyDown (UpdateStockEntry key stockInput)
-                        , onInput (\percent -> UpdateStockInput key (StockInput stock.name percent))
+                        [ onKeyDown (UpdateStockEntry stock stockInput)
+                        , onInput (\percent -> UpdateStockInput stock (StockInput stock.name percent))
                         , value stockInput.percent
                         ]
                         []
-                    , button [ onClick (Remove key) ] [ text "❌" ]
+                    , button [ onClick (Remove stock) ] [ text "❌" ]
                     ]
             )
