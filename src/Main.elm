@@ -100,18 +100,6 @@ update msg model =
         UpdateStockInput stock stockInput ->
             ( Model.updateStockInput stock stockInput model, Cmd.none )
 
-        {-
-           case Dict.get key model.stocks of
-               Just stockView ->
-                   let
-                       updatedStockView =
-                           StockView stockView.index stockInput stockView.stock
-                   in
-                   ( { model | stocks = Dict.insert key updatedStockView model.stocks }, Cmd.none )
-
-               Nothing ->
-                   ( model, Cmd.none )
-        -}
         UpdateNewStock stockInput ->
             ( { model | newStock = stockInput }, Cmd.none )
 
@@ -136,46 +124,8 @@ update msg model =
             else
                 ( model, Cmd.none )
 
-        {-
-               case Dict.get model.newStock.name model.stocks of
-                   Just stockView ->
-                       let
-                           name =
-                               model.newStock.name
-
-                           strPercent =
-                               model.newStock.percent
-                       in
-                       case String.toFloat strPercent of
-                           Just percent ->
-                               let
-                                   stock =
-                                       Stock name percent
-                               in
-                               { model
-                                   | stocks = Model.insert stock model
-                                   , newStock = StockInput "" ""
-                               }
-
-                           Nothing ->
-                               ( addStock model, Cmd.none )
-
-                   Nothing ->
-                       ( addStock model, Cmd.none )
-
-           else
-               ( model, Cmd.none )
-
-        -}
         Remove stock ->
             ( Model.remove stock model, Cmd.none )
-
-
-
-{- insertStockView : StockView -> Model -> Model
-   -- insertStockView stockView model =
-       { model | stocks = Dict.insert stockView.stock.name stockView model.stocks, newStock = StockInput "" "" }
--}
 
 
 addStock : Model -> Model
