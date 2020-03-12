@@ -106,16 +106,16 @@ remove key data =
                 | dict =
                     newDict
                         |> Dict.remove key
-                , tail = data.tail |> updateTail orderedValue
+                , tail = data.tail |> updateTail key orderedValue
             }
 
         Nothing ->
             data
 
 
-updateTail : OrderedValue comparable v -> Maybe comparable -> Maybe comparable
-updateTail value tail =
-    if value.previous == tail then
+updateTail : comparable -> OrderedValue comparable v -> Maybe comparable -> Maybe comparable
+updateTail key value tail =
+    if Just key == tail then
         value.previous
 
     else
@@ -160,7 +160,7 @@ updateNext next previous orderedDict =
             orderedDict
 
 
-toList : OrderedDict comparable v -> List v
+toList : OrderedDict comparable v -> List ( comparable, v )
 toList orderedDict =
     Dict.toList orderedDict.dict
-        |> List.map (\( _, v ) -> v.value)
+        |> List.map (\( k, v ) -> ( k, v.value ))
