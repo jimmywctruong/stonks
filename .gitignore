@@ -1,6 +1,9 @@
 # Elm Packages
 elm-stuff/
 
+# elm-coverage
+.coverage/
+
 # Node Packages
 node_modules/
 
